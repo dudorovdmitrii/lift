@@ -3,7 +3,7 @@
     <lift-column></lift-column>
     <div class="actionList">
       <button v-for="(val, i) in cells.length" :key="i" @click="addFloor(cells.length - i - 1)"
-        class="actionList_action">
+        :class="['actionList_action', {'active': queue.findIndex(floor => floor === cells.length - i - 1) !== -1}]">
         {{cells.length - i}}
       </button>
     </div>
@@ -19,11 +19,15 @@ export default {
   computed: {
     cells() {
       return store.state.cells;
+    },
+    queue() {
+      return store.state.queue;
     }
   },
   components: { LiftColumn },
   methods: {
     addFloor(floor) {
+      if (this.queue.includes(floor)) return;
       store.commit('updateQueue', { action: 'push', floor: floor });
     },
   }
@@ -65,9 +69,16 @@ export default {
   transition: all 0.3s;
   text-align: center;
   user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .actionList_action:hover {
+  background: var(--red);
+}
+
+.active {
   background: var(--red);
 }
 </style>

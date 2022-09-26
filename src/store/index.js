@@ -1,12 +1,12 @@
 import { createStore } from 'vuex';
-import { startFloor, floorCount } from './../settings';
+import { initialFloor, floorCount, initialQueue } from './../settings';
 
 const store = createStore({
   state() {
     return {
-      queue: [],
-      floor: startFloor,
-      cells: Array.from({ length: floorCount }, (val, ind) => ({ floor: floorCount - ind - 1, hasLift: floorCount - ind - 1 === startFloor ? true : false })),
+      queue: initialQueue,
+      floor: initialFloor,
+      cells: Array.from({ length: floorCount }, (val, ind) => ({ floor: floorCount - ind - 1, hasLift: floorCount - ind - 1 === initialFloor ? true : false })),
     }
   },
   mutations: {
@@ -21,9 +21,11 @@ const store = createStore({
           break;
         }
       }
+      localStorage.setItem('queue', JSON.stringify(state.queue));
     },
     updateFloor(state, payload) {
       state.floor = payload.newFloor;
+      localStorage.setItem('floor', payload.newFloor.toString());
     },
     updateItems(state, payload) {
       const reversedPrevFloor = state.cells.length - payload.prevFloor - 1;

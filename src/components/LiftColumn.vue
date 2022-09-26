@@ -1,21 +1,32 @@
 <template>
   <ul class="col">
     <li v-for="cell in cells" :key="cell.floor" class="col_cellWrapper">
-      <div :class="['col_cellWrapper_cell', {'col_cellWrapper_lift': cell.hasLift}]"
-        :ref="'cell' + cell.floor"></div>
+      <div :class="['col_cellWrapper_cell', {'lift': cell.hasLift}]" :ref="'cell' + cell.floor">
+        <div :class="['col_cellWrapper_cell_indicator', {'open': cell.hasLift && indicator}]">
+          {{indicator}}
+          <Arrow
+            :class="['svg', {'svg_up': this.direction === 'up', 'svg_down': this.direction === 'down'}]" />
+        </div>
+      </div>
     </li>
   </ul>
 </template>
 <script>
 import store from './../store';
+import { startAnimation } from '@/helpers/animate';
+import { blinkSettings, blinkCount } from './../settings';
+import Arrow from './../icons/arrow.vue'
 
 export default {
   data: () => {
     return {
       animationInProgress: false,
       borderWidth: 1,
+      indicator: '',
+      direction: 'up',
     }
   },
+  components: { Arrow },
   computed: {
     cells() {
       return store.state.cells;
@@ -28,39 +39,50 @@ export default {
     },
   },
   methods: {
-    animate() {
+    async animate() {
       if (!this.animationInProgress) this.animationInProgress = true;
 
       const cellHeight = this.$refs.cell0[0].clientHeight;
-      const lift = this.$refs['cell' + this.floor][0];
       const sign = this.floor > this.queue[0] ? 1 : -1;
       const distance = sign * ((cellHeight + this.borderWidth) * Math.abs(this.floor - this.queue[0]));
 
-      const animation = lift.animate([
-        { transform: `translateY(0px)` },
-        { transform: `translateY(${distance}px)` }
-      ], {
-        duration: Math.abs(this.floor - this.queue[0]) * 1000,
-        iterations: 1
-      });
+      this.indicator = this.queue[0] + 1;
+      this.direction = sign < 0 ? 'up' : 'down';
 
-      const animationListener = () => {
-        const newFloor = this.queue[0], prevFloor = this.floor;
+      // Запуск анимации перемещения на другой этаж
+      await startAnimation(
+        this.$refs['cell' + this.floor][0],
+        [
+          { transform: `translateY(0px)` },
+          { transform: `translateY(${distance}px)` }
+        ],
+        {
+          duration: Math.abs(this.floor - this.queue[0]) * 1000,
+          iterations: 1
+        }
+      );
 
-        store.commit('updateFloor', { newFloor });
-        store.commit('updateQueue', { action: 'shift' });
-        store.commit('updateItems', { newFloor, prevFloor });
+      this.indicator = ''
+      const newFloor = this.queue[0], prevFloor = this.floor;
+      store.commit('updateFloor', { newFloor });
+      store.commit('updateItems', { newFloor, prevFloor });
 
-        if (this.queue.length) this.animate();
-        else this.animationInProgress = false;
+      // Запуск анимации мигания
+      await startAnimation(
+        this.$refs['cell' + this.floor][0],
+        Array.from({ length: blinkCount * 2 }, (val, ind) => ({ opacity: ind % 2 === 0 ? 1 : 0 })),
+        blinkSettings
+      );
 
-        animation.removeEventListener('finish', animationListener);
-      }
+      store.commit('updateQueue', { action: 'shift' });
 
-      animation.addEventListener('finish', animationListener);
+      // Переход к следующим анимациям в очереди или завершение анимации
+      if (this.queue.length) this.animate();
+      else this.animationInProgress = false;
     },
   },
   mounted() {
+    if (this.queue.length) this.animate();
     store.subscribe((mutation) => {
       if (mutation.type === 'updateQueue' && !this.animationInProgress) this.animate();
     })
@@ -91,9 +113,33 @@ export default {
 .col_cellWrapper_lift {
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.col_cellWrapper_lift {
+.col_cellWrapper_cell_indicator {
+  display: none;
+}
+
+.open {
+  display: block;
+}
+
+.svg {
+  width: 10px;
+  height: 10px;
+}
+
+.svg_up {
+  transform: rotate(-90deg);
+}
+
+.svg_down {
+  transform: rotate(90deg);
+}
+
+.lift {
   background: var(--blue);
 }
 </style>
