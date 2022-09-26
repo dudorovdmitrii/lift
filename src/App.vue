@@ -1,26 +1,73 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <main class="layout">
+    <lift-column></lift-column>
+    <div class="actionList">
+      <button v-for="(val, i) in cells.length" :key="i" @click="addFloor(cells.length - i - 1)"
+        class="actionList_action">
+        {{cells.length - i}}
+      </button>
+    </div>
+  </main>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import store from './store';
+import LiftColumn from './components/LiftColumn.vue';
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+  computed: {
+    cells() {
+      return store.state.cells;
+    }
+  },
+  components: { LiftColumn },
+  methods: {
+    addFloor(floor) {
+      store.commit('updateQueue', { action: 'push', floor: floor });
+    },
   }
 }
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+<style scoped>
+.layout {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.actionList {
+  box-sizing: border-box;
+  padding: 0 10px;
+  border-top: 1px solid var(--black);
+  border-right: 1px solid var(--black);
+  border-bottom: 1px solid var(--black);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.actionList_action {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--black);
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.3s;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  user-select: none;
+}
+
+.actionList_action:hover {
+  background: var(--red);
 }
 </style>
