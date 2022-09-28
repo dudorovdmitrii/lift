@@ -1,10 +1,12 @@
-export const initialFloor = parseInt(localStorage.getItem('floor')) || 0;
-export const initialQueue = JSON.parse(localStorage.getItem('queue')) || [];
+// Количество этажей в шахте лифта
 export const floorCount = 10;
-export const liftCount = 1;
 
-export const blinkCount = 3;
+// Количество шафт
+export const liftCount = 2;
+
+// Настройки для анимации мигания лифта
+export const blinkCount = 3; // Количество миганий
 export const blinkSettings = {
-  duration: 3000,
+  duration: 3000, // Общее время миганий
   iteration: 1
 }
